@@ -49,7 +49,7 @@ public class Play extends AppCompatActivity implements SurfaceHolder.Callback, O
   private PowerManager.WakeLock wake_lock;
   private Player player;
   private boolean master;
-  private String masterIp;
+
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -138,7 +138,6 @@ public class Play extends AppCompatActivity implements SurfaceHolder.Callback, O
     android.net.Uri uri = intent.getData();
     Log.i("GStreamer", "Received URI: " + uri);
     master = intent.getBooleanExtra("master", false);
-    masterIp = intent.getStringExtra("master_ip");
 //        if (uri != null) {
 //            if (uri.getScheme().equals("content")) {
 //                android.database.Cursor cursor = getContentResolver().query(uri, null, null, null, null);
@@ -153,13 +152,16 @@ public class Play extends AppCompatActivity implements SurfaceHolder.Callback, O
 
     player.setUri("file:///data/data/org.freedesktop.gstreamer.play/files/BigBuckBunny.mp4");
     try {
-      player.setMaster(master, masterIp);
+      player.setMaster(master);
     } catch (Exception e) {
       Log.e("GStreamer", "Failed to set master", e);
     }
     SyncServer.initOnce(this);
 
     SyncClient.startListeningForSync(player);
+//    if (!master) {
+//      player.play();
+//    }
     updateTimeWidget();
   }
 

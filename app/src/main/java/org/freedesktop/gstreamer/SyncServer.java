@@ -3,7 +3,6 @@ package org.freedesktop.gstreamer;
 import android.content.Context;
 import android.net.DhcpInfo;
 import android.net.wifi.WifiManager;
-import android.os.StrictMode;
 import android.util.Log;
 
 
@@ -11,13 +10,9 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InterfaceAddress;
-import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.List;
 
 public class SyncServer {
   private static final int PORT = 20001;
@@ -36,7 +31,9 @@ public class SyncServer {
       while (true) {
         if (player != null && player.isMaster) {
           try {
-            SyncServer.sendSyncMessage(50000, player.baseTime, player.myIPAddress);
+
+            long position = player.nativeGetCurrentPosition();
+            SyncServer.sendSyncMessage(50000, player.baseTime, player.myIPAddress,position );
           } catch (Exception e) {
             Log.e("SyncServer", "Failed to send sync message", e);
           }
@@ -134,10 +131,10 @@ public class SyncServer {
     return InetAddress.getByAddress(quads);
   }
 
-  public static void sendSyncMessage(int port, long base, String ipAddress) throws IOException {
+  public static void sendSyncMessage(int port, long base, String ipAddress, long currentPosition) throws IOException {
     DatagramSocket socket = new DatagramSocket();
     socket.setBroadcast(true);
-    String syncMessage = "SYNC:" + port + ":" + base + ":" + ipAddress;
+    String syncMessage = "SYNC:" + port + ":" + base + ":" + ipAddress + ":" + currentPosition;
 
 
     // Send the sync message to the multicast group

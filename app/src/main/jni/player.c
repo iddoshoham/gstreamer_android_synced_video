@@ -451,7 +451,7 @@ native_set_net_client_clock(JNIEnv *env, jobject thiz, jstring ip, jint port,
 
     ip_str = (*env)->GetStringUTFChars(env, ip, NULL);
     player->net_client_clock = gst_net_client_clock_new("net-client-clock",
-                                                        ip_str, port, 0);
+                                                        ip_str, port, base);
 
     GstElement *pipeline = gst_player_get_pipeline(player->player);
     gst_element_set_start_time(pipeline, GST_CLOCK_TIME_NONE);
@@ -464,6 +464,20 @@ native_set_net_client_clock(JNIEnv *env, jobject thiz, jstring ip, jint port,
     GST_WARNING("Set NetClientClock from server %s:%d", ip_str, port);
 
     (*env)->ReleaseStringUTFChars(env, ip, ip_str);
+}
+
+static jlong
+native_get_current_position(JNIEnv *env, jobject thiz) {
+    Player *player = GET_CUSTOM_DATA(env, thiz, native_player_field_id);
+
+    if (!player)
+        return -1;
+
+    // Retrieve the current position in nanoseconds
+    GstClockTime position = gst_player_get_position(player->player);
+
+    // Return the position as a long (jlong) to Java
+    return (jlong) position;
 }
 
 static void
@@ -502,6 +516,7 @@ native_class_init(JNIEnv *env, jclass klass) {
     gst_debug_set_threshold_for_name("gst-player", GST_LEVEL_TRACE);
 }
 
+
 /* List of implemented native methods */
 static JNINativeMethod native_methods[] = {
         {"nativeClassInit",          "()V",                    (void *) native_class_init},
@@ -522,7 +537,8 @@ static JNINativeMethod native_methods[] = {
         {"nativeSetSurface",         "(Landroid/view/Surface;)V",
                                                                (void *) native_set_surface},
         {"nativeEnableTimeProvider", "(I)J",                   (void *) native_enable_time_provider},
-        {"nativeSetNetClientClock",  "(Ljava/lang/String;IJ)V", (void *) native_set_net_client_clock}
+        {"nativeSetNetClientClock",  "(Ljava/lang/String;IJ)V", (void *) native_set_net_client_clock},
+        {"nativeGetCurrentPosition", "()J",                    (void *) native_get_current_position} // New method
 };
 
 /* Library initializer */

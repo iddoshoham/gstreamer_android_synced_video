@@ -40,6 +40,7 @@ public class Player implements Closeable {
   public String myIPAddress;
   public boolean isMaster;
   private long serverBaseTime;
+  public long currentPosition;
 
   private static native void nativeClassInit();
 
@@ -171,6 +172,7 @@ public class Player implements Closeable {
     if (positionUpdatedListener != null) {
       positionUpdatedListener.positionUpdated(this, position);
     }
+    currentPosition = position;
   }
 
   public static interface DurationChangedListener {
@@ -301,20 +303,39 @@ public class Player implements Closeable {
     nativeSetNetClientClock(ip, port, base);
   }
 
-  public void setTimeAndPlay(int port, long base, String ip) {
+  public native long nativeGetCurrentPosition();
+
+  public long getCurrentPosition() {
+    return nativeGetCurrentPosition();
+  }
+
+
+  public void setTimeAndPlay(int port, long base, String ip, long currentPosition) {
     if (serverBaseTime == base) {
       Log.i("viso.Player", "Ignoring time update with same base time");
       return;
     }
     serverBaseTime = base;
+
+
     setNetClientClock(ip, port, base);
-    this.play.runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        stop();
-        play();
-      }
-    });
+
+    if (!isMaster) {
+//      stop();
+      seek(currentPosition );
+    }
+
+    play();
+
+
+//    this.play.runOnUiThread(new Runnable() {
+//      @Override
+//      public void run() {
+////        stop();
+//        play();
+//      }
+//    });
+
 
   }
 
@@ -346,10 +367,12 @@ public class Player implements Closeable {
     return "";
   }
 
-  public void setMaster(boolean master, String masterIP) throws IOException {
+  public void setMaster(boolean master) throws IOException {
     isMaster = master;
-    baseTime = enableTimeProvider(50000);
-    myIPAddress = getIPAddress(true);
+    if (master) {
+      baseTime = enableTimeProvider(50000);
+      myIPAddress = getIPAddress(true);
+    }
     SyncServer.setPlayer(this);
 
   }

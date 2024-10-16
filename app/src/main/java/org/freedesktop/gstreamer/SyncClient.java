@@ -37,10 +37,11 @@ public class SyncClient {
             int port = Integer.parseInt(parts[1]);
             long base = Long.parseLong(parts[2]);
             String ip = parts[3];
+            long currentPosition = Long.parseLong(parts[4]);
             if (player.isMaster) {
               ip = "127.0.0.1";
             }
-            player.setTimeAndPlay(port, base, ip);
+            player.setTimeAndPlay(port, base, ip, currentPosition);
 
 //
 //                        // Calculate the elapsed time since the message was sent
